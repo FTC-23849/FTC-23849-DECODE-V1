@@ -64,6 +64,9 @@ public class v1teleop extends OpMode {
         bottomShooterMotor = hardwareMap.get(DcMotorEx.class,"bottomShooterMotor");
         bottomShooterMotor.setDirection(DcMotorEx.Direction.REVERSE);
 
+        topShooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        bottomShooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         intakeMotor = hardwareMap.get(DcMotorEx.class, "intakeMotor");
         transferMotor = hardwareMap.get(DcMotorEx.class, "transferMotor");
 
