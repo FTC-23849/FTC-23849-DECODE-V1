@@ -1,20 +1,27 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.v1;
+import org.firstinspires.ftc.teamcode.vision.AprilTagTracking;
+import org.firstinspires.ftc.teamcode.vision.AprilTagTrackingTeleop;
 
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 
 @TeleOp(name = "v1teleop", group = "stuff")
-
 public class v1teleop extends OpMode {
+
     DcMotorEx leftFrontMotor;
     DcMotorEx rightFrontMotor;
     DcMotorEx leftBackMotor;
@@ -25,6 +32,8 @@ public class v1teleop extends OpMode {
     DcMotorEx bottomShooterMotor;
     CRServo transferServoLeft;
     CRServo transferServoRight;
+    private Limelight3A limelight;
+    private IMU imu;
     //GoBildaPinpointDriver pinpoint;
     Servo light;
 
@@ -38,6 +47,7 @@ public class v1teleop extends OpMode {
     ElapsedTime transferReverse = new ElapsedTime();
 
     @Override
+
     public void init() {
         leftFrontMotor  = hardwareMap.get(DcMotorEx.class,"LF");
         rightFrontMotor = hardwareMap.get(DcMotorEx.class, "RF");
@@ -66,6 +76,25 @@ public class v1teleop extends OpMode {
         pinpoint.setPosition(new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.DEGREES,0));
         */
         light = hardwareMap.get(Servo.class,"light");
+        limelight = hardwareMap.get(Limelight3A.class, "Limelight");
+        limelight.pipelineSwitch(8);
+        imu = hardwareMap.get(IMU.class, "imu");
+        RevHubOrientationOnRobot revHubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD);
+        imu.initialize(new IMU.Parameters(revHubOrientationOnRobot));
+
+        leftFrontMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftBackMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightFrontMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightBackMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+
+        YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
+        limelight.updateRobotOrientation(orientation.getYaw());
+    }
+
+    public void start() {
+        limelight.start();
     }
 
     @Override
@@ -95,11 +124,12 @@ public class v1teleop extends OpMode {
         double leftBackPower = (y - x + rx) / denominator;
         double rightFrontPower = (y - x - rx) / denominator;
         double rightBackPower = (y + x - rx) / denominator;
-
-        leftFrontMotor.setPower(leftFrontPower);
-        leftBackMotor.setPower(leftBackPower);
-        rightFrontMotor.setPower(rightFrontPower);
-        rightBackMotor.setPower(rightBackPower);
+        if(!gamepad1.left_bumper) {
+            leftFrontMotor.setPower(leftFrontPower);
+            leftBackMotor.setPower(leftBackPower);
+            rightFrontMotor.setPower(rightFrontPower);
+            rightBackMotor.setPower(rightBackPower);
+        }
         //intake
         if(gamepad1.right_trigger > 0.1){
             intaking = true;
@@ -117,7 +147,7 @@ public class v1teleop extends OpMode {
             intakeMotor.setPower(-1);
         }
         //reverse intake once finished so ball isnt stuck in shooter
-        else if(!intaking && transferReverse.milliseconds() < 250){
+        else if(!intaking && transferReverse.milliseconds() < 500){
             transferServoLeft.setPower(v1.transferServoReverse * -1);
             transferServoRight.setPower(v1.transferServoReverse);
             transferMotor.setPower(v1.transferMotorReverse);
@@ -142,6 +172,10 @@ public class v1teleop extends OpMode {
         }
         //shoot from close zone
         if(gamepad1.left_bumper){
+            new AprilTagTrackingTeleop();
+            AprilTagTrackingTeleop.AprilTagTracker(leftFrontMotor, leftBackMotor, rightFrontMotor,rightBackMotor,limelight,imu);
+            leftFrontMotor.setDirection(DcMotorEx.Direction.REVERSE);
+            leftBackMotor.setDirection(DcMotorEx.Direction.REVERSE);
             topShooterMotor.setPower(closeShootingPower);
             bottomShooterMotor.setPower(closeShootingPower);
             shooting = true;
