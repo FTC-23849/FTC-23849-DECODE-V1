@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 //left front and left back reversed to maek it compatible with teleop
 
 
-public class AprilTagTrackingTeleop {
+public class AprilTagTrackingClose {
     public boolean AprilTagTracker(DcMotorEx leftFrontMotor, DcMotorEx leftBackMotor, DcMotorEx rightFrontMotor, DcMotorEx rightBackMotor, Limelight3A limelight, IMU imu) {
         double Offset = -7.11;
         LLResult result = limelight.getLatestResult();

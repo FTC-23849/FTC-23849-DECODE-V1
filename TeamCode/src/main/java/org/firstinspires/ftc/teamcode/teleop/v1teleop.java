@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
 import org.firstinspires.ftc.teamcode.vision.AprilTagTrackingFarZone;
-import  org.firstinspires.ftc.teamcode.vision.AprilTagTrackingTeleop;
+import org.firstinspires.ftc.teamcode.vision.AprilTagTrackingClose;
 
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
@@ -46,7 +46,7 @@ public class v1teleop extends OpMode {
     double farShootingPower = v1.defaultFarZonePower;
     boolean intaking = false;
     ElapsedTime transferReverse = new ElapsedTime();
-    AprilTagTrackingTeleop Tracker = new AprilTagTrackingTeleop();
+    AprilTagTrackingClose Tracker = new AprilTagTrackingClose();
     AprilTagTrackingFarZone FarZoneTracker = new AprilTagTrackingFarZone();
     @Override
 
@@ -131,7 +131,7 @@ public class v1teleop extends OpMode {
         double leftBackPower = (y - x + rx) / denominator;
         double rightFrontPower = (y - x - rx) / denominator;
         double rightBackPower = (y + x - rx) / denominator;
-        if(!gamepad1.left_bumper) {
+        if(!gamepad1.left_bumper && !gamepad1.right_bumper) {
             leftFrontMotor.setPower(leftFrontPower);
             leftBackMotor.setPower(leftBackPower);
             rightFrontMotor.setPower(rightFrontPower);
