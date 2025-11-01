@@ -16,6 +16,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 public class AprilTagTrackingTeleopQuick {
     public boolean AprilTagTracker(DcMotorEx leftFrontMotor, DcMotorEx leftBackMotor, DcMotorEx rightFrontMotor, DcMotorEx rightBackMotor, Limelight3A limelight, IMU imu) {
+        double Offset = -7.11;
         LLResult result = limelight.getLatestResult();
         if (result.isValid()& result != null) {
             leftFrontMotor.setDirection(DcMotorEx.Direction.FORWARD);
@@ -61,11 +62,11 @@ public class AprilTagTrackingTeleopQuick {
                 rightBackMotor.setPower(0);
             }
             boolean Check = false;
-            double LimelightOffsetCorrection = -7.11;
-            if (Math.abs(yval+7.11) >= 2) {
+            double LimelightOffsetCorrection = -Offset;
+            if (Math.abs(yval+Offset) >= 2) {
                 double FOV = 17;
                 double rotationalInput = (yval < LimelightOffsetCorrection ? -1 : 1) * turnSpeed;
-                turnSpeed = ((Math.abs(yval+7.11) / 17) < 0.2 ? 0.04 : yval / 17);
+                turnSpeed = ((Math.abs(yval+Offset) / 17) < 0.2 ? 0.04 : yval / 17);
                 double denominator = Math.max(Math.abs(rotationalInput), 1);
                 double leftFrontPower = (rotationalInput) / denominator;
                 double leftBackPower = (rotationalInput) / denominator;
