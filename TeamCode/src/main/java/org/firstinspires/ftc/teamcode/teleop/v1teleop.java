@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
-import  org.firstinspires.ftc.teamcode.vision.AprilTagTrackingTeleopQuick;
+import org.firstinspires.ftc.teamcode.vision.AprilTagTrackingFarZone;
+import  org.firstinspires.ftc.teamcode.vision.AprilTagTrackingTeleop;
 
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
@@ -45,7 +46,8 @@ public class v1teleop extends OpMode {
     double farShootingPower = v1.defaultFarZonePower;
     boolean intaking = false;
     ElapsedTime transferReverse = new ElapsedTime();
-    AprilTagTrackingTeleopQuick Tracker = new AprilTagTrackingTeleopQuick();
+    AprilTagTrackingTeleop Tracker = new AprilTagTrackingTeleop();
+    AprilTagTrackingFarZone FarZoneTracker = new AprilTagTrackingFarZone();
     @Override
 
     public void init() {
@@ -201,6 +203,16 @@ public class v1teleop extends OpMode {
             bottomShooterMotor.setPower(farShootingPower);
             shooting = true;
             gate.setPosition(v1.gateOpen);
+            boolean CheckStatus = false;
+            if(gamepad1.right_bumper & !CheckStatus){
+                telemetry.addData("CheckStatus",CheckStatus = FarZoneTracker.AprilTagTracker(leftFrontMotor, leftBackMotor, rightFrontMotor,rightBackMotor,imu,limelight));
+                telemetry.update();
+            }
+            leftFrontMotor.setDirection(DcMotorEx.Direction.REVERSE);
+            leftBackMotor.setDirection(DcMotorEx.Direction.REVERSE);
+            rightFrontMotor.setDirection(DcMotorEx.Direction.FORWARD);
+            rightBackMotor.setDirection(DcMotorEx.Direction.FORWARD);
+
             /*if(pinpointPosition.getHeading(AngleUnit.DEGREES) > (v1.blueFarAngle - 2) && pinpointPosition.getHeading(AngleUnit.DEGREES)<(v1.blueFarAngle+2)|| pinpointPosition.getHeading(AngleUnit.DEGREES) > (v1.redFarAngle - 2) && pinpointPosition.getHeading(AngleUnit.DEGREES)<(v1.redFarAngle+2)){
                 light.setPosition(1);
             }*/

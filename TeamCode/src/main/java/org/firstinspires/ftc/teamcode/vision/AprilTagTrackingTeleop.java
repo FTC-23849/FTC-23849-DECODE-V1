@@ -1,20 +1,14 @@
 package org.firstinspires.ftc.teamcode.vision;
 
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.util.ElapsedTime;
 //left front and left back reversed to maek it compatible with teleop
-import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
-public class AprilTagTrackingTeleopQuick {
+
+public class AprilTagTrackingTeleop {
     public boolean AprilTagTracker(DcMotorEx leftFrontMotor, DcMotorEx leftBackMotor, DcMotorEx rightFrontMotor, DcMotorEx rightBackMotor, Limelight3A limelight, IMU imu) {
         double Offset = -7.11;
         LLResult result = limelight.getLatestResult();
@@ -27,10 +21,11 @@ public class AprilTagTrackingTeleopQuick {
             rightFrontMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             rightBackMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             double turnSpeed = 0.3;
+            double ErrorMarginTurning = 2;
+            double ErrorMarginTagSize = 0.2;
             double yval = result.getTy();
             double xval = result.getTx();
             double TagSize = result.getTa();
-            double CorrectOrientation;
             double TargetSize = 2.1;
             leftFrontMotor.setPower(0);
             leftBackMotor.setPower(0);
@@ -38,7 +33,7 @@ public class AprilTagTrackingTeleopQuick {
             rightFrontMotor.setPower(0);
             rightBackMotor.setPower(0);
 
-            if (Math.abs(TargetSize - TagSize) > 0.2) {
+            if (Math.abs(TargetSize - TagSize) > ErrorMarginTagSize) {
                 double distance = (Math.abs(TargetSize - TagSize) < 0.3 ? 0.3 : Math.abs(TargetSize - TagSize) );
                 double denominator = 1;
                 if (TagSize < TargetSize) {
@@ -62,11 +57,9 @@ public class AprilTagTrackingTeleopQuick {
                 rightBackMotor.setPower(0);
             }
             boolean Check = false;
-            double LimelightOffsetCorrection = -Offset;
-            if (Math.abs(yval+Offset) >= 2) {
+            if (Math.abs(yval-Offset) >= ErrorMarginTurning) {
                 double FOV = 17;
-                double rotationalInput = (yval < LimelightOffsetCorrection ? -1 : 1) * turnSpeed;
-                turnSpeed = ((Math.abs(yval+Offset) / 17) < 0.2 ? 0.04 : yval / 17);
+                double rotationalInput = (yval < Offset ? -1 : 1) * turnSpeed;
                 double denominator = Math.max(Math.abs(rotationalInput), 1);
                 double leftFrontPower = (rotationalInput) / denominator;
                 double leftBackPower = (rotationalInput) / denominator;
@@ -78,7 +71,7 @@ public class AprilTagTrackingTeleopQuick {
                 rightFrontMotor.setPower(rightFrontPower);
                 rightBackMotor.setPower(rightBackPower);
 
-                if (Math.abs(yval) >= 2 & Math.abs(TargetSize - TagSize) < 0.2) {
+                if (Math.abs(yval-Offset) <= ErrorMarginTurning & Math.abs(TargetSize - TagSize) < ErrorMarginTagSize) {
                     Check = true;
                 }
             }
