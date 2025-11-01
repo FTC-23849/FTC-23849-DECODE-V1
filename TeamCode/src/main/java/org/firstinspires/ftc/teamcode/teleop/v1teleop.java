@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
+import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -15,6 +16,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.v1;
 import org.firstinspires.ftc.teamcode.vision.AprilTagTracking;
 import org.firstinspires.ftc.teamcode.vision.AprilTagTrackingTeleop;
+import org.firstinspires.ftc.teamcode.vision.AprilTagTrackingTeleopQuick;
 
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -36,6 +38,7 @@ public class v1teleop extends OpMode {
     private IMU imu;
     //GoBildaPinpointDriver pinpoint;
     Servo light;
+    Servo gate;
 
 
     double rx;
@@ -58,10 +61,10 @@ public class v1teleop extends OpMode {
 
         topShooterMotor = hardwareMap.get(DcMotorEx.class,"topShooterMotor");
         bottomShooterMotor = hardwareMap.get(DcMotorEx.class,"bottomShooterMotor");
-        bottomShooterMotor.setDirection(DcMotorEx.Direction.REVERSE);
 
         topShooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         bottomShooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        topShooterMotor.setDirection(DcMotorEx.Direction.REVERSE);
 
         intakeMotor = hardwareMap.get(DcMotorEx.class, "intakeMotor");
         transferMotor = hardwareMap.get(DcMotorEx.class, "transferMotor");
@@ -76,6 +79,7 @@ public class v1teleop extends OpMode {
         pinpoint.setPosition(new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.DEGREES,0));
         */
         light = hardwareMap.get(Servo.class,"light");
+        gate = hardwareMap.get(Servo.class,"gate");
         limelight = hardwareMap.get(Limelight3A.class, "Limelight");
         limelight.pipelineSwitch(8);
         imu = hardwareMap.get(IMU.class, "imu");
@@ -97,8 +101,89 @@ public class v1teleop extends OpMode {
         limelight.start();
     }
 
+
+    public boolean AprilTagTracker(DcMotorEx leftFrontMotor, DcMotorEx leftBackMotor, DcMotorEx rightFrontMotor, DcMotorEx rightBackMotor, Limelight3A limelight, IMU imu) {
+        LLResult result = limelight.getLatestResult();
+        if (result.isValid()& result != null) {
+            telemetry.addData("gamepadb pressed", gamepad1.b);
+            telemetry.update();
+            leftFrontMotor.setDirection(DcMotorEx.Direction.FORWARD);
+            leftBackMotor.setDirection(DcMotorEx.Direction.FORWARD);
+            result = limelight.getLatestResult();
+            leftFrontMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            leftBackMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            rightFrontMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            rightBackMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            double turnSpeed = 0.3;
+            double yval = result.getTy();
+            double xval = result.getTx();
+            double TagSize = result.getTa();
+            double CorrectOrientation;
+            double TargetSize = 2.1;
+            leftFrontMotor.setPower(0);
+            leftBackMotor.setPower(0);
+
+            rightFrontMotor.setPower(0);
+            rightBackMotor.setPower(0);
+
+            if (Math.abs(TargetSize - TagSize) > 0.2) {
+                double distance = (Math.abs(TargetSize - TagSize) < 0.3 ? 0.3 : Math.abs(TargetSize - TagSize) );
+                double denominator = 1;
+                if (TagSize < TargetSize) {
+                    denominator = 1;
+                } else {
+                    denominator = -1;
+                }
+
+                double leftFrontPower = (distance) / denominator;
+                double leftBackPower = (distance) / denominator;
+                double rightFrontPower = (distance) / denominator;
+                double rightBackPower = (distance) / denominator;
+                leftFrontMotor.setPower(leftFrontPower);
+                leftBackMotor.setPower(leftBackPower);
+                rightFrontMotor.setPower(-rightFrontPower);
+                rightBackMotor.setPower(-rightBackPower);
+            } else {
+                leftFrontMotor.setPower(0);
+                leftBackMotor.setPower(0);
+                rightFrontMotor.setPower(0);
+                rightBackMotor.setPower(0);
+            }
+            boolean Check = false;
+            double LimelightOffsetCorrection = -7.11;
+            if (Math.abs(yval+7.11) >= 2) {
+                double FOV = 17;
+                double rotationalInput = (yval < LimelightOffsetCorrection ? -1 : 1) * turnSpeed;
+                turnSpeed = ((Math.abs(yval+7.11) / 17) < 0.2 ? 0.04 : yval / 17);
+                double denominator = Math.max(Math.abs(rotationalInput), 1);
+                double leftFrontPower = (rotationalInput) / denominator;
+                double leftBackPower = (rotationalInput) / denominator;
+                double rightFrontPower = (rotationalInput) / denominator;
+                double rightBackPower = (rotationalInput) / denominator;
+
+                leftFrontMotor.setPower(leftFrontPower);
+                leftBackMotor.setPower(leftBackPower);
+                rightFrontMotor.setPower(rightFrontPower);
+                rightBackMotor.setPower(rightBackPower);
+
+                if (Math.abs(yval) >= 2 & Math.abs(TargetSize - TagSize) < 0.2) {
+                    Check = true;
+                }
+            }
+
+            return Check;
+    }
+        leftFrontMotor.setPower(0);
+        leftBackMotor.setPower(0);
+        rightFrontMotor.setPower(0);
+        rightBackMotor.setPower(0);
+        return true;
+    }
     @Override
     public void loop() {
+
+        telemetry.addData("gamepadb pressed", gamepad1.b);
+
         //Pose2D pinpointPosition = pinpoint.getPosition();
         telemetry.addData("rx",rx);
         telemetry.addData("shooting",shooting);
@@ -172,13 +257,20 @@ public class v1teleop extends OpMode {
         }
         //shoot from close zone
         if(gamepad1.left_bumper){
-            new AprilTagTrackingTeleop();
-            AprilTagTrackingTeleop.AprilTagTracker(leftFrontMotor, leftBackMotor, rightFrontMotor,rightBackMotor,limelight,imu);
-            leftFrontMotor.setDirection(DcMotorEx.Direction.REVERSE);
-            leftBackMotor.setDirection(DcMotorEx.Direction.REVERSE);
             topShooterMotor.setPower(closeShootingPower);
             bottomShooterMotor.setPower(closeShootingPower);
             shooting = true;
+            gate.setPosition(v1.gateOpen);
+            boolean CheckStatus = false;
+            if(gamepad1.left_bumper & !CheckStatus){
+                CheckStatus = AprilTagTracker(leftFrontMotor, leftBackMotor, rightFrontMotor,rightBackMotor,limelight,imu);
+
+            }
+            leftFrontMotor.setDirection(DcMotorEx.Direction.REVERSE);
+            leftBackMotor.setDirection(DcMotorEx.Direction.REVERSE);
+            rightFrontMotor.setDirection(DcMotorEx.Direction.FORWARD);
+            rightBackMotor.setDirection(DcMotorEx.Direction.FORWARD);
+
             /*if(pinpointPosition.getHeading(AngleUnit.DEGREES) > (v1.blueCloseAngle - 2) && pinpointPosition.getHeading(AngleUnit.DEGREES)<(v1.blueCloseAngle+2) || pinpointPosition.getHeading(AngleUnit.DEGREES) > (v1.redCloseAngle - 2) && pinpointPosition.getHeading(AngleUnit.DEGREES)<(v1.redCloseAngle+2)){
                 light.setPosition(1);
             }*/
@@ -188,6 +280,7 @@ public class v1teleop extends OpMode {
             topShooterMotor.setPower(farShootingPower);
             bottomShooterMotor.setPower(farShootingPower);
             shooting = true;
+            gate.setPosition(v1.gateOpen);
             /*if(pinpointPosition.getHeading(AngleUnit.DEGREES) > (v1.blueFarAngle - 2) && pinpointPosition.getHeading(AngleUnit.DEGREES)<(v1.blueFarAngle+2)|| pinpointPosition.getHeading(AngleUnit.DEGREES) > (v1.redFarAngle - 2) && pinpointPosition.getHeading(AngleUnit.DEGREES)<(v1.redFarAngle+2)){
                 light.setPosition(1);
             }*/
@@ -197,6 +290,7 @@ public class v1teleop extends OpMode {
             bottomShooterMotor.setPower(0);
             light.setPosition(0);
             shooting = false;
+            gate.setPosition(v1.gateClose);
         }
         if(gamepad1.b){
             //pinpoint.setPosition(new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.DEGREES,0));

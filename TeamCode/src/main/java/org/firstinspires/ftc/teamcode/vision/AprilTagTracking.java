@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.vision;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.hardware.limelightvision.LLResult;
@@ -12,7 +13,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
-
+@TeleOp(name = "AprilTagTracking")
 public class AprilTagTracking extends OpMode {
     private Limelight3A limelight;
     private IMU imu;
@@ -63,10 +64,10 @@ public class AprilTagTracking extends OpMode {
         LLResult llResult = limelight.getLatestResult();
 
 
-        double xval = llResult.getTx();
+        double yval = llResult.getTy();
         double TagSize = llResult.getTa();
         double CorrectOrientation;
-        if (Math.abs(xval) <= 1.3) {
+        if (Math.abs(yval) <= 1.3) {
             leftFrontMotor.setPower(0);
             leftBackMotor.setPower(0);
             rightFrontMotor.setPower(0);
@@ -90,8 +91,8 @@ public class AprilTagTracking extends OpMode {
                 rightBackMotor.setPower(-rightBackPower);
             }
         } else {
-            double rotationalInput = (xval > 0 ? -1 : 1) * turnSpeed;
-            turnSpeed =  (xval / 32 < 0.3 ? 0.1  : xval / 48 );
+            double rotationalInput = (yval > 0 ? -1 : 1) * turnSpeed;
+            turnSpeed =  (yval / 32 < 0.3 ? 0.1  : yval / 48 );
             double denominator = Math.max( Math.abs(rotationalInput), 1);
             double leftFrontPower = (rotationalInput) / denominator;
             double leftBackPower = ( rotationalInput) / denominator;
