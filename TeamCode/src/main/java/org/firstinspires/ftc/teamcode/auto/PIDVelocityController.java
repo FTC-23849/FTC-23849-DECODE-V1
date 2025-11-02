@@ -17,7 +17,29 @@ public class PIDVelocityController {
         this.targetVelocity = targetVelocity;
         timer.reset();
     }
+    public double tuneFeedForward (int direction, double Kv) {
+        double correctionVal = 0.000002;
+        if (direction == 1){
+            double NewKv = Kv + correctionVal;
+        }else{
+            if (direction == -1){
+                double NewKv = Kv - correctionVal;
+            }
+        }
+        return correctionVal;
+    }
 
+    public double tuneIntegral (int direction, double Kv) {
+        double correctionVal = 0.2;
+        if (direction == 1){
+            double NewKv = Kv + correctionVal;
+        }else{
+            if (direction == -1){
+                double NewKv = Kv - correctionVal;
+            }
+        }
+        return correctionVal;
+    }
     public double update(double currentVelocity) {
         double error = targetVelocity - currentVelocity;
         double dt = timer.seconds();
