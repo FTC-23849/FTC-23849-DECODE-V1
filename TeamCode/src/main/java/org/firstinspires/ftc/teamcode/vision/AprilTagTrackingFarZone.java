@@ -21,7 +21,7 @@ public class AprilTagTrackingFarZone {
             leftBackMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             rightFrontMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             rightBackMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            double turnSpeed = 0.5;
+            double turnSpeed = 0.4;
             double yval = result.getTy();
             double xval = result.getTx();
             double TagSize = result.getTa();

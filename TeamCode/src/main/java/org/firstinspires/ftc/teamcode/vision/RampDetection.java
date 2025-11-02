@@ -30,7 +30,7 @@ public class RampDetection extends OpMode {
         LLResult result = limelight.getLatestResult();
         double[] pythonOutputs = result.getPythonOutput();
         if (pythonOutputs != null && pythonOutputs.length > 0) {
-            double firstOutput = pythonOutputs[0];
+            double[] firstOutput = result.getPythonOutput();
             telemetry.addData("Python output:", firstOutput);
         }
     }

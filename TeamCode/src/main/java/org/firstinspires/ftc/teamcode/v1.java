@@ -1,8 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
 public class v1 {
-    public static double autoDefaultFarZonePower = 0.56;
-    public static double autoDefaultCloseZonePower = 0.43;
+    public static double autoDefaultFarZonePower = 0.5;
+    public static double autoDefaultCloseZonePower = 0.33;
     public static double defaultFarZonePower = 0.5;
     public static double defaultCloseZonePower = 0.33;
     public static double transferServoShoot = 1;

@@ -300,17 +300,17 @@ public class blueCloseAutovision extends LinearOpMode {
     public class AimCloseZone implements Action {
 
         public AimCloseZone(){
-            timer.reset();
-            boolean CheckStatus = true;
-            while (!CheckStatus & timer.milliseconds() < 1000 ){
-                CheckStatus = Tracker.AprilTagTracker(leftFrontMotor, leftBackMotor, rightFrontMotor,rightBackMotor,limelight,imu);
 
-            }
         }
 
         @Override
         public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-            return false;
+            timer.reset();
+            boolean CheckStatus = false;
+
+            CheckStatus = Tracker.AprilTagTracker(leftFrontMotor, leftBackMotor, rightFrontMotor,rightBackMotor,limelight,imu);
+            telemetry.addData("Detected AprilTag: ", CheckStatus);
+            return !CheckStatus & timer.milliseconds() < 1000 ;
         }
     }
     public class feedBalls implements Action {
