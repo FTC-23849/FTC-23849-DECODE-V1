@@ -39,6 +39,7 @@ public class blueFarAuto extends LinearOpMode {
     CRServo transferServoRight;
     //GoBildaPinpointDriver pinpoint;
     Servo light;
+    Servo gate;
 
     ElapsedTime timer = new ElapsedTime();
 
@@ -64,7 +65,7 @@ public class blueFarAuto extends LinearOpMode {
 
         topShooterMotor = hardwareMap.get(DcMotorEx.class,"topShooterMotor");
         bottomShooterMotor = hardwareMap.get(DcMotorEx.class,"bottomShooterMotor");
-        bottomShooterMotor.setDirection(DcMotorEx.Direction.REVERSE);
+        topShooterMotor.setDirection(DcMotorEx.Direction.REVERSE);
 
         topShooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         bottomShooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -76,6 +77,10 @@ public class blueFarAuto extends LinearOpMode {
         transferServoRight = hardwareMap.get(CRServo.class, "transferServoRight");
 
         light = hardwareMap.get(Servo.class,"light");
+
+        gate = hardwareMap.get(Servo.class,"gate");
+
+        gate.setPosition(v1.gateOpen);
 
 
         waitForStart();
@@ -108,7 +113,8 @@ public class blueFarAuto extends LinearOpMode {
 
         Actions.runBlocking(new ParallelAction(
                 goToIntakeHP.build(),
-                new stopFeed(transferMotor, intakeMotor, transferServoLeft, transferServoRight),
+                new setGate(gate, false),
+                //new stopFeed(transferMotor, intakeMotor, transferServoLeft, transferServoRight),
                 new setIntake(intakeMotor, transferMotor, 1.0),
                 new setShooter(topShooterMotor, bottomShooterMotor, 0.0)
         ));
@@ -119,7 +125,7 @@ public class blueFarAuto extends LinearOpMode {
 
 
         TrajectoryActionBuilder intakeHP = drive.actionBuilder(drive.localizer.getPose())
-                .strafeToLinearHeading(new Vector2d(62, -64), Math.toRadians(0), new TranslationalVelConstraint(50), new ProfileAccelConstraint(-50, 50));
+                .strafeToLinearHeading(new Vector2d(64, -64), Math.toRadians(0), new TranslationalVelConstraint(10), new ProfileAccelConstraint(-10, 10));
 
         Actions.runBlocking(new SequentialAction(
                 intakeHP.build(),
@@ -138,11 +144,18 @@ public class blueFarAuto extends LinearOpMode {
         Actions.runBlocking(new SequentialAction(
                 new ParallelAction(
                         scoreHP.build(),
-                        new setShooter(topShooterMotor, bottomShooterMotor, v1.autoDefaultFarZonePower)
+                        new setShooter(topShooterMotor, bottomShooterMotor, v1.autoDefaultFarZonePower),
+                        new SequentialAction(
+                                new SleepAction(0.8),
+                                new ParallelAction(
+                                        new stopFeed(transferMotor, intakeMotor, transferServoLeft, transferServoRight)
+                                )
+                        )
                 ),
+                new setGate(gate, true),
                 new SleepAction(1),
                 new feedBalls(transferMotor, intakeMotor, transferServoLeft, transferServoRight),
-                new SleepAction(1.8),
+                new SleepAction(3),
                 new stopFeed(transferMotor, intakeMotor, transferServoLeft, transferServoRight)
         ));
 
@@ -208,7 +221,7 @@ public class blueFarAuto extends LinearOpMode {
         @Override
         public boolean run(@NonNull TelemetryPacket telemetryPacket) {
 
-            transferMotor.setPower(v1.transferMotorShoot);
+            transferMotor.setPower(0.5);
             intakeMotor.setPower(v1.intakeShoot);
             transferServoLeft.setPower(-v1.transferServoShoot);
             transferServoRight.setPower(v1.transferServoShoot);
@@ -261,6 +274,29 @@ public class blueFarAuto extends LinearOpMode {
 
             intakeMotor.setPower(power);
             //transferMotor.setPower(v1.transferIntake);
+
+            return false;
+        }
+    }
+
+    public class setGate implements Action {
+
+        Servo gate;
+        boolean gateOpen;
+
+        public setGate(Servo gate, boolean gateOpen){
+            this.gate = gate;
+            this.gateOpen = gateOpen;
+        }
+
+        @Override
+        public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+
+            if (gateOpen) {
+                gate.setPosition(v1.gateOpen);
+            } else {
+                gate.setPosition(v1.gateClose);
+            }
 
             return false;
         }

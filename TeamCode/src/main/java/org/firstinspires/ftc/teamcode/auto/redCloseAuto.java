@@ -23,7 +23,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.auto.RRFiles.MecanumDrive;
 import org.firstinspires.ftc.teamcode.v1;
 
-
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous
 public class redCloseAuto extends LinearOpMode {
 
@@ -39,12 +38,19 @@ public class redCloseAuto extends LinearOpMode {
     CRServo transferServoRight;
     //GoBildaPinpointDriver pinpoint;
     Servo light;
+    Servo gate;
 
     ElapsedTime timer = new ElapsedTime();
 
-    double minVel = 90;
-    double minAccel = -90;
-    double maxAccel = 90;
+    double minVelIntaking = 60;
+    double minAccelIntaking = -60;
+    double maxAccelIntaking = 60;
+
+    double minVelDrive = 70;
+    double minAccelDrive = -70;
+    double maxAccelDrive = 70;
+
+    double gateDelay = 0.3;
 
     @Override
     public void runOpMode() {
@@ -64,7 +70,7 @@ public class redCloseAuto extends LinearOpMode {
 
         topShooterMotor = hardwareMap.get(DcMotorEx.class,"topShooterMotor");
         bottomShooterMotor = hardwareMap.get(DcMotorEx.class,"bottomShooterMotor");
-        bottomShooterMotor.setDirection(DcMotorEx.Direction.REVERSE);
+        topShooterMotor.setDirection(DcMotorEx.Direction.REVERSE);
 
         topShooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         bottomShooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -76,7 +82,9 @@ public class redCloseAuto extends LinearOpMode {
         transferServoRight = hardwareMap.get(CRServo.class, "transferServoRight");
 
         light = hardwareMap.get(Servo.class,"light");
+        gate = hardwareMap.get(Servo.class,"gate");
 
+        gate.setPosition(v1.gateOpen);
 
         waitForStart();
 
@@ -86,7 +94,7 @@ public class redCloseAuto extends LinearOpMode {
 
         //score preload
         TrajectoryActionBuilder scorePreloads = drive.actionBuilder(startPose)
-                .strafeToLinearHeading(new Vector2d(-23, 15), Math.toRadians(310));
+                .strafeToLinearHeading(new Vector2d(-23, 15), Math.toRadians(310), new TranslationalVelConstraint(minVelDrive), new ProfileAccelConstraint(minAccelDrive, maxAccelDrive));
 
         Actions.runBlocking(new SequentialAction(
                 new ParallelAction(
@@ -94,8 +102,8 @@ public class redCloseAuto extends LinearOpMode {
                         new setShooter(topShooterMotor, bottomShooterMotor, v1.autoDefaultCloseZonePower)
                 ),
                 new feedBalls(transferMotor, intakeMotor, transferServoLeft, transferServoRight),
-                new SleepAction(1.8),
-                new stopFeed(transferMotor, intakeMotor, transferServoLeft, transferServoRight, true)
+                new SleepAction(1.8)
+                //new stopFeed(transferMotor, intakeMotor, transferServoLeft, transferServoRight, true)
         ));
 
         drive.updatePoseEstimate();
@@ -104,11 +112,12 @@ public class redCloseAuto extends LinearOpMode {
 
         //Collect 1st spike mark
         TrajectoryActionBuilder goToIntakeSpike1 = drive.actionBuilder(drive.localizer.getPose())
-                .strafeToLinearHeading(new Vector2d(-8, 25), Math.toRadians(90));
+                .strafeToLinearHeading(new Vector2d(-9.5, 25), Math.toRadians(90), new TranslationalVelConstraint(minVelDrive), new ProfileAccelConstraint(minAccelDrive, maxAccelDrive));
 
         Actions.runBlocking(new ParallelAction(
                 goToIntakeSpike1.build(),
-                new stopFeed(transferMotor, intakeMotor, transferServoLeft, transferServoRight, true),
+                new setGate(gate, false),
+                //new stopFeed(transferMotor, intakeMotor, transferServoLeft, transferServoRight, true),
                 new setIntake(intakeMotor, transferMotor, 1.0),
                 new setShooter(topShooterMotor, bottomShooterMotor, 0.0)
         ));
@@ -119,11 +128,11 @@ public class redCloseAuto extends LinearOpMode {
 
 
         TrajectoryActionBuilder intakeSpike1 = drive.actionBuilder(drive.localizer.getPose())
-                .strafeToLinearHeading(new Vector2d(-8, 60), Math.toRadians(90), new TranslationalVelConstraint(minVel), new ProfileAccelConstraint(minAccel, maxAccel));
+                .strafeToLinearHeading(new Vector2d(-9.5, 60), Math.toRadians(90), new TranslationalVelConstraint(minVelIntaking), new ProfileAccelConstraint(minAccelIntaking, maxAccelIntaking));
 
         Actions.runBlocking(new SequentialAction(
-                intakeSpike1.build(),
-                new setIntake(intakeMotor, transferMotor, 0.0)
+                intakeSpike1.build()
+                //new setIntake(intakeMotor, transferMotor, 0.0)
         ));
 
         drive.updatePoseEstimate();
@@ -133,16 +142,24 @@ public class redCloseAuto extends LinearOpMode {
 
         //shoot 1st spike mark
         TrajectoryActionBuilder scoreSpike1 = drive.actionBuilder(drive.localizer.getPose())
-                .strafeToLinearHeading(new Vector2d(-23, 15), Math.toRadians(310));
+                .strafeToLinearHeading(new Vector2d(-23, 15), Math.toRadians(310), new TranslationalVelConstraint(minVelDrive), new ProfileAccelConstraint(minAccelDrive, maxAccelDrive));
 
         Actions.runBlocking(new SequentialAction(
                 new ParallelAction(
                         scoreSpike1.build(),
-                        new setShooter(topShooterMotor, bottomShooterMotor, v1.autoDefaultCloseZonePower)
+                        new setShooter(topShooterMotor, bottomShooterMotor, v1.autoDefaultCloseZonePower),
+                        new SequentialAction(
+                                new SleepAction(0.8),
+                                new ParallelAction(
+                                        new stopFeed(transferMotor, intakeMotor, transferServoLeft, transferServoRight, true)
+                                )
+                        )
                 ),
+                new setGate(gate, true),
+                new SleepAction(gateDelay),
                 new feedBalls(transferMotor, intakeMotor, transferServoLeft, transferServoRight),
-                new SleepAction(1.8),
-                new stopFeed(transferMotor, intakeMotor, transferServoLeft, transferServoRight, true)
+                new SleepAction(1.5)
+                //new stopFeed(transferMotor, intakeMotor, transferServoLeft, transferServoRight, true)
         ));
 
         drive.updatePoseEstimate();
@@ -152,11 +169,12 @@ public class redCloseAuto extends LinearOpMode {
 
         //Collect 2nd spike mark
         TrajectoryActionBuilder goToIntakeSpike2 = drive.actionBuilder(drive.localizer.getPose())
-                .strafeToLinearHeading(new Vector2d(16, 25), Math.toRadians(90));
+                .strafeToLinearHeading(new Vector2d(14, 25), Math.toRadians(90), new TranslationalVelConstraint(minVelDrive), new ProfileAccelConstraint(minAccelDrive, maxAccelDrive));
 
         Actions.runBlocking(new ParallelAction(
                 goToIntakeSpike2.build(),
-                new stopFeed(transferMotor, intakeMotor, transferServoLeft, transferServoRight, true),
+                new setGate(gate, false),
+                //new stopFeed(transferMotor, intakeMotor, transferServoLeft, transferServoRight, true),
                 new setIntake(intakeMotor, transferMotor, 1.0),
                 new setShooter(topShooterMotor, bottomShooterMotor, 0.0)
         ));
@@ -167,11 +185,11 @@ public class redCloseAuto extends LinearOpMode {
 
 
         TrajectoryActionBuilder intakeSpike2 = drive.actionBuilder(drive.localizer.getPose())
-                .strafeToLinearHeading(new Vector2d(16, 66), Math.toRadians(90), new TranslationalVelConstraint(minVel), new ProfileAccelConstraint(minAccel, maxAccel));
+                .strafeToLinearHeading(new Vector2d(14, 66), Math.toRadians(90), new TranslationalVelConstraint(minVelIntaking), new ProfileAccelConstraint(minAccelIntaking, maxAccelIntaking));
 
         Actions.runBlocking(new SequentialAction(
-                intakeSpike2.build(),
-                new setIntake(intakeMotor, transferMotor, 0.0)
+                intakeSpike2.build()
+                //new setIntake(intakeMotor, transferMotor, 0.0)
         ));
 
         drive.updatePoseEstimate();
@@ -181,17 +199,25 @@ public class redCloseAuto extends LinearOpMode {
 
         //shoot 2nd spike mark
         TrajectoryActionBuilder scoreSpike2 = drive.actionBuilder(drive.localizer.getPose())
-                .strafeToLinearHeading(new Vector2d(16, 52), Math.toRadians(90))
-                .strafeToLinearHeading(new Vector2d(-23, 15), Math.toRadians(310));
+                .strafeToLinearHeading(new Vector2d(11.5, 52), Math.toRadians(90), new TranslationalVelConstraint(minVelDrive), new ProfileAccelConstraint(minAccelDrive, maxAccelDrive))
+                .strafeToLinearHeading(new Vector2d(-23, 15), Math.toRadians(310), new TranslationalVelConstraint(minVelDrive), new ProfileAccelConstraint(minAccelDrive, maxAccelDrive));
 
         Actions.runBlocking(new SequentialAction(
                 new ParallelAction(
                         scoreSpike2.build(),
-                        new setShooter(topShooterMotor, bottomShooterMotor, v1.autoDefaultCloseZonePower)
+                        new setShooter(topShooterMotor, bottomShooterMotor, v1.autoDefaultCloseZonePower),
+                        new SequentialAction(
+                                new SleepAction(0.8),
+                                new ParallelAction(
+                                        new stopFeed(transferMotor, intakeMotor, transferServoLeft, transferServoRight, true)
+                                )
+                        )
                 ),
+                new setGate(gate, true),
+                new SleepAction(gateDelay),
                 new feedBalls(transferMotor, intakeMotor, transferServoLeft, transferServoRight),
-                new SleepAction(1.8),
-                new stopFeed(transferMotor, intakeMotor, transferServoLeft, transferServoRight, true)
+                new SleepAction(1.5)
+                //new stopFeed(transferMotor, intakeMotor, transferServoLeft, transferServoRight, true)
         ));
 
         drive.updatePoseEstimate();
@@ -202,11 +228,12 @@ public class redCloseAuto extends LinearOpMode {
 
         //Collect 3rd spike mark
         TrajectoryActionBuilder goToIntakeSpike3 = drive.actionBuilder(drive.localizer.getPose())
-                .strafeToLinearHeading(new Vector2d(40, 25), Math.toRadians(90));
+                .strafeToLinearHeading(new Vector2d(39.5, 25), Math.toRadians(90), new TranslationalVelConstraint(minVelDrive), new ProfileAccelConstraint(minAccelDrive, maxAccelDrive));
 
         Actions.runBlocking(new ParallelAction(
                 goToIntakeSpike3.build(),
-                new stopFeed(transferMotor, intakeMotor, transferServoLeft, transferServoRight, true),
+                new setGate(gate, false),
+                //new stopFeed(transferMotor, intakeMotor, transferServoLeft, transferServoRight, true),
                 new setIntake(intakeMotor, transferMotor, 1.0),
                 new setShooter(topShooterMotor, bottomShooterMotor, 0.0)
         ));
@@ -217,11 +244,11 @@ public class redCloseAuto extends LinearOpMode {
 
 
         TrajectoryActionBuilder intakeSpike3 = drive.actionBuilder(drive.localizer.getPose())
-                .strafeToLinearHeading(new Vector2d(40, 66), Math.toRadians(90), new TranslationalVelConstraint(minVel), new ProfileAccelConstraint(minAccel, maxAccel));
+                .strafeToLinearHeading(new Vector2d(39.5, 66), Math.toRadians(90), new TranslationalVelConstraint(minVelIntaking), new ProfileAccelConstraint(minAccelIntaking, maxAccelIntaking));
 
         Actions.runBlocking(new SequentialAction(
-                intakeSpike3.build(),
-                new setIntake(intakeMotor, transferMotor, 0.0)
+                intakeSpike3.build()
+                //new setIntake(intakeMotor, transferMotor, 0.0)
         ));
 
         drive.updatePoseEstimate();
@@ -231,16 +258,24 @@ public class redCloseAuto extends LinearOpMode {
 
         //shoot 3rd spike mark
         TrajectoryActionBuilder scoreSpike3 = drive.actionBuilder(drive.localizer.getPose())
-                .strafeToLinearHeading(new Vector2d(-23, 15), Math.toRadians(310));
+                .strafeToLinearHeading(new Vector2d(-28, 15), Math.toRadians(304), new TranslationalVelConstraint(minVelDrive), new ProfileAccelConstraint(minAccelDrive, maxAccelDrive));
 
         Actions.runBlocking(new SequentialAction(
                 new ParallelAction(
                         scoreSpike3.build(),
-                        new setShooter(topShooterMotor, bottomShooterMotor, v1.autoDefaultCloseZonePower)
+                        new setShooter(topShooterMotor, bottomShooterMotor, v1.autoDefaultCloseZonePower),
+                        new SequentialAction(
+                                new SleepAction(0.8),
+                                new ParallelAction(
+                                        new stopFeed(transferMotor, intakeMotor, transferServoLeft, transferServoRight, true)
+                                )
+                        )
                 ),
+                new setGate(gate, true),
+                new SleepAction(gateDelay),
                 new feedBalls(transferMotor, intakeMotor, transferServoLeft, transferServoRight),
-                new SleepAction(1.5),
-                new stopFeed(transferMotor, intakeMotor, transferServoLeft, transferServoRight, true)
+                new SleepAction(1.5)
+                //new stopFeed(transferMotor, intakeMotor, transferServoLeft, transferServoRight, true)
         ));
 
         drive.updatePoseEstimate();
@@ -341,6 +376,29 @@ public class redCloseAuto extends LinearOpMode {
                 intakeMotor.setPower(0.0);
             } else {
 
+            }
+
+            return false;
+        }
+    }
+
+    public class setGate implements Action {
+
+        Servo gate;
+        boolean gateOpen;
+
+        public setGate(Servo gate, boolean gateOpen){
+            this.gate = gate;
+            this.gateOpen = gateOpen;
+        }
+
+        @Override
+        public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+
+            if (gateOpen) {
+                gate.setPosition(v1.gateOpen);
+            } else {
+                gate.setPosition(v1.gateClose);
             }
 
             return false;
