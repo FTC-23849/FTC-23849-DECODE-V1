@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.teleop;
 
 import org.firstinspires.ftc.teamcode.vision.AprilTagTrackingFarZone;
 import org.firstinspires.ftc.teamcode.vision.AprilTagTrackingClose;
+import org.firstinspires.ftc.teamcode.auto.PIDVelocityController;
 
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
@@ -20,7 +21,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 
 @TeleOp(name = "v1teleop", group = "stuff")
-public class v1teleop extends OpMode {
+public class v1teleopPID extends OpMode {
 
     DcMotorEx leftFrontMotor;
     DcMotorEx rightFrontMotor;
@@ -37,7 +38,10 @@ public class v1teleop extends OpMode {
     //GoBildaPinpointDriver pinpoint;
     Servo light;
     Servo gate;
-
+    public static double Kp = 0.00107;
+    public static double Ki = 0;
+    public static double Kd = 0.000007;
+    public static double Kv = 0.000627;
 
     double rx;
     boolean shooting;
@@ -178,8 +182,15 @@ public class v1teleop extends OpMode {
             intaking = false;
         }
         //shoot from close zone
-        if(gamepad1.left_bumper){            telemetry.addData("speed",topShooterMotor.getVelocity());
+        if(gamepad1.left_bumper){
+            telemetry.addData("speed",topShooterMotor.getVelocity());
             telemetry.update();
+            double closeShootingPowerInTicks = (closeShootingPower * 5800)*28/60;
+            PIDVelocityController closePID = new PIDVelocityController(Kp, Ki, Kd, Kv, closeShootingPowerInTicks);
+            double currentVelocity = topShooterMotor.getVelocity();
+            double closePower = closePID.update(currentVelocity);
+            topShooterMotor.setPower(closePower);
+            bottomShooterMotor.setPower(closePower);
             topShooterMotor.setPower(closeShootingPower);
             bottomShooterMotor.setPower(closeShootingPower);
             shooting = true;
@@ -202,8 +213,13 @@ public class v1teleop extends OpMode {
         else if(gamepad1.right_bumper){
             telemetry.addData("speed",topShooterMotor.getVelocity());
             telemetry.update();
-            topShooterMotor.setPower(farShootingPower);
-            bottomShooterMotor.setPower(farShootingPower);
+            double farShootingPowerInTicks = (farShootingPower * 5800)*28/60;
+            PIDVelocityController farPID = new PIDVelocityController(Kp, Ki, Kd, Kv, farShootingPowerInTicks);
+            double currentVelocity = topShooterMotor.getVelocity();
+            double farPower = farPID.update(currentVelocity);
+            topShooterMotor.setPower(farPower);
+            bottomShooterMotor.setPower(farPower);
+
             shooting = true;
             gate.setPosition(v1.gateOpen);
             boolean CheckStatus = false;
@@ -259,3 +275,4 @@ public class v1teleop extends OpMode {
     }
 
 }
+
