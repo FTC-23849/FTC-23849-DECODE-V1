@@ -104,7 +104,7 @@ public class AprilTagTracking extends OpMode {
             rightFrontMotor.setPower(rightFrontPower);
             rightBackMotor.setPower(rightBackPower);
         }
-
+// close zone 2000 far zone 40000
 
     }
 

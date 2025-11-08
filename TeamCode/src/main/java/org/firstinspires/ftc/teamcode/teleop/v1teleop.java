@@ -37,7 +37,10 @@ public class v1teleop extends OpMode {
     //GoBildaPinpointDriver pinpoint;
     Servo light;
     Servo gate;
-
+    public static double Kp = 0.00107;
+    public static double Ki = 0;
+    public static double Kd = 0.000007;
+    public static double Kv = 0.000627;
 
     double rx;
     boolean shooting;
@@ -178,7 +181,8 @@ public class v1teleop extends OpMode {
             intaking = false;
         }
         //shoot from close zone
-        if(gamepad1.left_bumper){            telemetry.addData("speed",topShooterMotor.getVelocity());
+        if(gamepad1.left_bumper){
+            telemetry.addData("speed",topShooterMotor.getVelocity());
             telemetry.update();
             topShooterMotor.setPower(closeShootingPower);
             bottomShooterMotor.setPower(closeShootingPower);
