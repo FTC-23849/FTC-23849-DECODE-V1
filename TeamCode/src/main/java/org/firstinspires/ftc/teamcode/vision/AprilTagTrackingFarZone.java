@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 public class AprilTagTrackingFarZone {
     public boolean AprilTagTracker(DcMotorEx leftFrontMotor, DcMotorEx leftBackMotor, DcMotorEx rightFrontMotor, DcMotorEx rightBackMotor,IMU imu, Limelight3A limelight) {
-        double Offset = -5.5;
+        double Offset = -1.02;
         double ErrorMargin = 0.5;
         LLResult result = limelight.getLatestResult();
         if (result.isValid()& result != null) {
@@ -21,7 +21,7 @@ public class AprilTagTrackingFarZone {
             leftBackMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             rightFrontMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             rightBackMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            double turnSpeed = 0.4;
+            double turnSpeed = 0.2;
             double yval = result.getTy();
             double xval = result.getTx();
             double TagSize = result.getTa();
@@ -37,6 +37,7 @@ public class AprilTagTrackingFarZone {
                 ///if(Math.abs(yval - Offset) < 1){
                 ///    turnSpeed = 0.1;
                 ///}
+                turnSpeed = (Math.abs(yval-Offset) > 2 ? 0.3 : 0.15);
                 double rotationalInput = (yval < Offset ? -1 : 1) * turnSpeed;
                 double denominator = Math.max(Math.abs(rotationalInput), 1);
                 double leftFrontPower = (rotationalInput) / denominator;

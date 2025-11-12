@@ -178,7 +178,8 @@ public class v1teleop extends OpMode {
             intaking = false;
         }
         //shoot from close zone
-        if(gamepad1.left_bumper){            telemetry.addData("speed",topShooterMotor.getVelocity());
+        if(gamepad1.left_bumper){
+            telemetry.addData("speed",topShooterMotor.getVelocity());
             telemetry.update();
             topShooterMotor.setPower(closeShootingPower);
             bottomShooterMotor.setPower(closeShootingPower);

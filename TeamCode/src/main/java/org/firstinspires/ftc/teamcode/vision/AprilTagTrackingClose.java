@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 public class AprilTagTrackingClose {
     public boolean AprilTagTracker(DcMotorEx leftFrontMotor, DcMotorEx leftBackMotor, DcMotorEx rightFrontMotor, DcMotorEx rightBackMotor, Limelight3A limelight, IMU imu) {
-        double Offset = -7.11;
+        double Offset = -10.7;
         LLResult result = limelight.getLatestResult();
         if (result.isValid()& result != null) {
             leftFrontMotor.setDirection(DcMotorEx.Direction.FORWARD);
@@ -59,6 +59,7 @@ public class AprilTagTrackingClose {
             boolean Check = false;
             if (Math.abs(yval-Offset) >= ErrorMarginTurning) {
                 double FOV = 17;
+                turnSpeed = (Math.abs(yval-Offset) > 2 ? 0.3 : 0.15);
                 double rotationalInput = (yval < Offset ? -1 : 1) * turnSpeed;
                 double denominator = Math.max(Math.abs(rotationalInput), 1);
                 double leftFrontPower = (rotationalInput) / denominator;

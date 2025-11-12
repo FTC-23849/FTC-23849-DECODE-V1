@@ -11,7 +11,7 @@ public class RampDetection extends OpMode {
 
     @Override
     public void init() {
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight = hardwareMap.get(Limelight3A.class, "Limelight");
         limelight.setPollRateHz(100);
         limelight.start();
         telemetry.addLine("Ramp Detection Initialized");
@@ -22,20 +22,31 @@ public class RampDetection extends OpMode {
         LLResult result = limelight.getLatestResult();
         if (result != null && result.getPythonOutput() != null) {
             double[] pythonOutputs = result.getPythonOutput();
-            if (pythonOutputs.length >= 9) {
+
+            if (pythonOutputs.length > 0) {
                 StringBuilder pattern = new StringBuilder();
-                for (int i = 0; i < pythonOutputs.length; i++) {
-                    int v = (int) pythonOutputs[i];
-                    switch (v) {
-                        case 1: pattern.append("G "); break;
-                        case 2: pattern.append("P "); break;
-                        default: pattern.append("_ "); break;
+                int ballCount = 0;
+
+                for (double output : pythonOutputs) {
+                    int v = (int) output;
+                    if (v == 1) {
+                        pattern.append("G ");
+                        ballCount++;
+                    } else if (v == 2) {
+                        pattern.append("P ");
+                        ballCount++;
                     }
                 }
-                telemetry.addData("Ramp Pattern",  pattern);
+
+                telemetry.addData("Balls Detected", ballCount);
+                telemetry.addData("Pattern", pattern.toString().trim());
+            } else {
+                telemetry.addData("Balls Detected", 0);
+                telemetry.addData("Pattern", "None");
             }
         } else {
-            telemetry.addData("Ramp Pattern", "Null");
+            telemetry.addData("Balls Detected", "N/A");
+            telemetry.addData("Pattern", "Null");
         }
         telemetry.update();
     }

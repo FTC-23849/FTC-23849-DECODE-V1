@@ -5,13 +5,18 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import org.firstinspires.ftc.teamcode.auto.PIDVelocityController;
+import org.firstinspires.ftc.teamcode.v1;
 
 @Config
 @TeleOp(name = "Velocity PID Example")
 public class VelocityPIDExample extends LinearOpMode {
-
+    CRServo transferServoLeft;
+    CRServo transferServoRight;
+    DcMotorEx intakeMotor;
+    DcMotorEx transferMotor;
     private DcMotorEx topShooterMotor;
     private DcMotorEx bottomShooterMotor;
     private PIDVelocityController velocityPID;
@@ -29,9 +34,13 @@ public class VelocityPIDExample extends LinearOpMode {
 
         topShooterMotor = hardwareMap.get(DcMotorEx.class, "topShooterMotor");
         bottomShooterMotor = hardwareMap.get(DcMotorEx.class, "bottomShooterMotor");
-
+        transferServoLeft = hardwareMap.get(CRServo.class, "transferServoLeft");
+        transferServoRight = hardwareMap.get(CRServo.class, "transferServoRight");
+        intakeMotor = hardwareMap.get(DcMotorEx.class, "intakeMotor");
+        transferMotor = hardwareMap.get(DcMotorEx.class, "transferMotor");
         topShooterMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
         topShooterMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        topShooterMotor.setDirection(DcMotorEx.Direction.REVERSE);
         bottomShooterMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
         bottomShooterMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
@@ -40,6 +49,10 @@ public class VelocityPIDExample extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
+            transferServoLeft.setPower(-0.8);
+            transferServoRight.setPower(0.8);
+            transferMotor.setPower(0.8);
+            intakeMotor.setPower(0.8);
             double currentVelocity = topShooterMotor.getVelocity();
             velocityPID.setTargetVelocity(TargetVelocity);
             velocityPID.setGains(Kp, Ki, Kd);

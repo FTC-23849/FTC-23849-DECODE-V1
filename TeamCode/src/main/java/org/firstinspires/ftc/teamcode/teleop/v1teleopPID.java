@@ -20,7 +20,7 @@ import org.firstinspires.ftc.teamcode.v1;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 
-@TeleOp(name = "v1teleop", group = "stuff")
+@TeleOp(name = "v1teleopPID", group = "stuff")
 public class v1teleopPID extends OpMode {
 
     DcMotorEx leftFrontMotor;
@@ -39,15 +39,15 @@ public class v1teleopPID extends OpMode {
     Servo light;
     Servo gate;
     public static double Kp = 0.00107;
-    public static double Ki = 0;
+    public static double Ki = 0.007;
     public static double Kd = 0.000007;
     public static double Kv = 0.000627;
 
     double rx;
     boolean shooting;
 
-    double closeShootingPower = v1.defaultCloseZonePower;
-    double farShootingPower = v1.defaultFarZonePower;
+    double closeShootingPower = v1.defaultCloseZonePowerPID;
+    double farShootingPower = v1.defaultFarZonePowerPID;
     boolean intaking = false;
     ElapsedTime transferReverse = new ElapsedTime();
     AprilTagTrackingClose Tracker = new AprilTagTrackingClose();
@@ -212,9 +212,10 @@ public class v1teleopPID extends OpMode {
         // shoot from far zone
         else if(gamepad1.right_bumper){
             telemetry.addData("speed",topShooterMotor.getVelocity());
+            telemetry.addData("Ki",Ki);
             telemetry.update();
             double farShootingPowerInTicks = (farShootingPower * 5800)*28/60;
-            PIDVelocityController farPID = new PIDVelocityController(Kp, Ki, Kd, Kv, farShootingPowerInTicks);
+            PIDVelocityController farPID = new PIDVelocityController(Kp, Ki, Kd, Kv, 1120);
             double currentVelocity = topShooterMotor.getVelocity();
             double farPower = farPID.update(currentVelocity);
             topShooterMotor.setPower(farPower);

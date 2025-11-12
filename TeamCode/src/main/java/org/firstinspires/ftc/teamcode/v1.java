@@ -5,8 +5,10 @@ public class v1 {
     public static double autoDefaultCloseZonePower = 0.33;
     public static double defaultFarZonePower = 0.46;
     public static double defaultCloseZonePower = 0.33;
-    public static double transferServoShoot = 1;
-    public static double transferMotorShoot = 1;
+    public static double defaultFarZonePowerPID = 0.41379;
+    public static double defaultCloseZonePowerPID = 0.29;
+    public static double transferServoShoot = 0.8;
+    public static double transferMotorShoot = 0.8;
     public static double transferServoIntake = -0.2;
     public static double transferServoReverse = -1;
     public static double transferMotorReverse = -0.3;

@@ -38,12 +38,12 @@ public class PIDVelocityController {
         double output = pidOutput + Kv * targetVelocity;
 
         // Handle timing-based auto feedforward tuning logic
-        if (!initialPowerReached && tuneTimer.milliseconds() > 1000) {
+        if (!initialPowerReached && tuneTimer.milliseconds() > 500) {
             tuneTimer.reset();
             initialPowerReached = true;
         }
 
-        if (tuneTimer.milliseconds() > 250) {
+        if (tuneTimer.milliseconds() > 100) {
             settled = true;
         }
 
